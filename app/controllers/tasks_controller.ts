@@ -1,5 +1,5 @@
 import Task from '#models/task'
-import { createTaskValidator } from '#validators/task'
+import { createTaskValidator, updateTaskValidator } from '#validators/task'
 import type { HttpContext } from '@adonisjs/core/http'
 
 export default class TasksController {
@@ -34,12 +34,37 @@ export default class TasksController {
       })
 
       await user.load('tasks')
-      return response.ok(user.tasks)
+      return response.created(user.tasks)
     } catch (error) {
       return response.status(401).json({ error: error.message })
     }
   }
-  async show({ params, response }) {}
-  async update() {}
-  async destroy() {}
+  async show({ params, response }: HttpContext) {
+    try {
+      const task = await Task.findByOrFail('id', params.id)
+      return response.ok(task)
+    } catch (error) {
+      return response.status(401).json({ error: 'Task not found' })
+    }
+  }
+  async update({ request, params, response }: HttpContext) {
+    try {
+      const task = await Task.findByOrFail('id', params.id)
+      const { title, description, done } = await request.validateUsing(updateTaskValidator)
+      task.merge({ title, description, done })
+      await task.save()
+      return response.ok(task)
+    } catch (error) {
+      return response.status(401).json({ error: 'Task not found' })
+    }
+  }
+  async destroy({ params, response }: HttpContext) {
+    try {
+      const task = await Task.findByOrFail('id', params.id)
+      task.delete()
+      return response.status(203)
+    } catch (error) {
+      return response.status(401).json({ error: 'Task not found' })
+    }
+  }
 }
