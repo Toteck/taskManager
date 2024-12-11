@@ -1,5 +1,3 @@
-import User from '#models/user'
-import { createSessionValidator } from '#validators/session'
 import type { HttpContext } from '@adonisjs/core/http'
 
 export default class TasksController {
@@ -13,7 +11,7 @@ export default class TasksController {
 
       await user.preload('tasks')
 
-      return response.ok(user)
+      return response.ok(user.tasks)
     } catch (error) {
       return response.status(401).json({ error: error.message })
     }
